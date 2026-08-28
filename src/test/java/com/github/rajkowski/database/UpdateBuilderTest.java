@@ -99,6 +99,15 @@ public class UpdateBuilderTest extends TestCase {
         assertEquals(Arrays.asList("alice", 10L, true), spec.getParameters());
     }
 
+    public void testUpdateBuilderAllowsRawArithmeticSetExpressions() {
+        QuerySpec spec = DB.UPDATE("users")
+                .SET("file_count = file_count + " + 3)
+                .WHERE("sub_folder_id IN (SELECT sub_folder_id FROM files WHERE file_id = ?)", 42L);
+
+        assertEquals("UPDATE users SET file_count = file_count + 3 WHERE sub_folder_id IN (SELECT sub_folder_id FROM files WHERE file_id = ?)", spec.getSql());
+        assertEquals(Arrays.asList(42L), spec.getParameters());
+    }
+
     public void testUpdateBuilderExecutesWithConcreteReturnType() throws Exception {
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl("jdbc:h2:mem:" + uniqueDbName("db_update_execute") + ";DB_CLOSE_DELAY=-1");

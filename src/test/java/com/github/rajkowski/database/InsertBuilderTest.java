@@ -115,7 +115,8 @@ public class InsertBuilderTest extends TestCase {
             DB.setDataSource(dataSource);
 
             try (Connection connection = dataSource.getConnection();
-                 PreparedStatement statement = connection.prepareStatement("CREATE TABLE users (id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(50))")) {
+                    PreparedStatement statement = connection.prepareStatement(
+                            "CREATE TABLE users (id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(50))")) {
                 statement.executeUpdate();
             }
 
@@ -145,7 +146,8 @@ public class InsertBuilderTest extends TestCase {
             DB.setDataSource(dataSource);
 
             try (Connection connection = dataSource.getConnection();
-                 PreparedStatement statement = connection.prepareStatement("CREATE TABLE users_without_key (name VARCHAR(50))")) {
+                    PreparedStatement statement = connection
+                            .prepareStatement("CREATE TABLE users_without_key (name VARCHAR(50))")) {
                 statement.executeUpdate();
             }
 

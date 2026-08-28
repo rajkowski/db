@@ -342,6 +342,21 @@ public class QuerySpec {
     return normalized;
   }
 
+  protected static String sanitizeAssignmentClause(String clause) {
+    if (clause == null || clause.trim().isEmpty()) {
+      throw new IllegalArgumentException("Assignment clause cannot be empty.");
+    }
+    String normalized = clause.trim();
+    if (normalized.contains(";") || normalized.contains("--") || normalized.contains("/*")
+        || normalized.contains("*/")) {
+      throw new IllegalArgumentException("Unsafe SQL fragment detected; use parameterized values only.");
+    }
+    if (!normalized.matches("[A-Za-z0-9_\\.\\s=<>!()?@%:,\\[\\]\\+\\-\\*\\|&'\\\"$\\/{}/\\\\]+")) {
+      throw new IllegalArgumentException("Unsafe SQL fragment detected; use parameterized values only.");
+    }
+    return normalized;
+  }
+
   private static String stripSubqueryBodies(String text) {
     if (text == null || text.isEmpty()) {
       return text;

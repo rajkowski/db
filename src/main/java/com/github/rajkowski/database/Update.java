@@ -274,7 +274,7 @@ public class Update extends QuerySpec {
     if (assignment == null || assignment.isBlank()) {
       throw new IllegalArgumentException("Assignment cannot be empty.");
     }
-    String normalized = sanitizeConditionClause(assignment);
+    String normalized = sanitizeAssignmentClause(assignment);
     rawSetClauses.add(normalized);
     return this;
   }
