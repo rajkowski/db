@@ -19,6 +19,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.Arrays;
 
+import org.postgresql.util.PGobject;
+
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
@@ -77,7 +79,29 @@ public class InsertBuilderTest extends TestCase {
                 .FIELD("link", "/about");
 
         assertEquals("INSERT INTO web_pages (tags, link) VALUES (?, ?)", spec.getSql());
-        assertEquals(Arrays.asList("[\"home\",\"news\"]", "/about"), spec.getParameters());
+        assertEquals(2, spec.getParameters().size());
+        assertTrue(spec.getParameters().get(0) instanceof PGobject);
+        assertEquals("[\"home\",\"news\"]", ((PGobject) spec.getParameters().get(0)).getValue());
+        assertEquals("/about", spec.getParameters().get(1));
+    }
+
+    public void testJsonbCastFieldUsesPostgresTypeBinding() {
+        Field field = new Field("tags", "[\"home\",\"news\"]", CastType.JSONB);
+
+        assertEquals(java.sql.Types.OTHER, field.getSqlType());
+        assertEquals(CastType.JSONB, field.getCastType());
+    }
+
+    public void testJsonbParametersAreBoundAsPostgresJsonbObjects() {
+        QuerySpec spec = DB.INSERT()
+                .INTO("web_pages")
+                .FIELD("tags", "[\"home\",\"news\"]", CastType.JSONB);
+
+        assertEquals(1, spec.getParameters().size());
+        assertTrue(spec.getParameters().get(0) instanceof PGobject);
+        PGobject jsonb = (PGobject) spec.getParameters().get(0);
+        assertEquals("jsonb", jsonb.getType());
+        assertEquals("[\"home\",\"news\"]", jsonb.getValue());
     }
 
     public void testInsertBuilderSupportsOnConflictDoUpdate() {

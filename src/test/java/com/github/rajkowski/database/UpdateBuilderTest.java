@@ -86,7 +86,10 @@ public class UpdateBuilderTest extends TestCase {
                 .WHERE("web_page_id = ?", 12L);
 
         assertEquals("UPDATE web_pages SET tags = ? WHERE web_page_id = ?", spec.getSql());
-        assertEquals(Arrays.asList("[\"home\",\"news\"]", 12L), spec.getParameters());
+        assertEquals(2, spec.getParameters().size());
+        assertTrue(spec.getParameters().get(0) instanceof org.postgresql.util.PGobject);
+        assertEquals("[\"home\",\"news\"]", ((org.postgresql.util.PGobject) spec.getParameters().get(0)).getValue());
+        assertEquals(12L, spec.getParameters().get(1));
     }
 
     public void testUpdateBuilderSupportsFluentAndClauses() {

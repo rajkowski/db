@@ -19,6 +19,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
+
+import org.postgresql.util.PGobject;
 import java.util.List;
 import java.util.Locale;
 
@@ -489,6 +491,20 @@ public class QuerySpec {
   protected static Object readFieldValue(Field field) {
     if (field == null || field.isNull()) {
       return null;
+    }
+    if (field.getCastType() == CastType.JSONB) {
+      String jsonValue = field.getStringValue();
+      if (jsonValue == null) {
+        return null;
+      }
+      try {
+        PGobject jsonb = new PGobject();
+        jsonb.setType("jsonb");
+        jsonb.setValue(jsonValue);
+        return jsonb;
+      } catch (SQLException e) {
+        throw new IllegalArgumentException("Invalid JSONB value: " + jsonValue, e);
+      }
     }
     if (field.getStringValue() != null) {
       return field.getStringValue();

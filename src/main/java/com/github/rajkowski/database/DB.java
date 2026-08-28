@@ -31,6 +31,7 @@ import javax.sql.DataSource;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.postgresql.util.PGobject;
 
 /**
  * Utility class for database operations, including tenant-aware datasource management
@@ -1327,6 +1328,19 @@ public final class DB {
 
     if (field.isNull()) {
       statement.setNull(index, field.getSqlType() == Types.ARRAY ? Types.OTHER : field.getSqlType());
+      return;
+    }
+
+    if (field.getCastType() == CastType.JSONB) {
+      String jsonValue = field.getStringValue();
+      if (jsonValue == null) {
+        statement.setNull(index, Types.OTHER);
+        return;
+      }
+      PGobject jsonb = new PGobject();
+      jsonb.setType("jsonb");
+      jsonb.setValue(jsonValue);
+      statement.setObject(index, jsonb);
       return;
     }
 

@@ -136,7 +136,7 @@ public class Field {
     if (CastType.ARRAY.equals(castType)) {
       this.sqlType = Types.ARRAY;
     } else if (CastType.JSONB.equals(castType)) {
-      this.sqlType = Types.VARCHAR;
+      this.sqlType = Types.OTHER;
     } else if (CastType.INTERVAL.equals(castType)) {
       this.sqlType = Types.OTHER;
       if (StringUtils.isBlank(value)) {
