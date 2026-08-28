@@ -22,6 +22,7 @@ import java.util.Objects;
  */
 public final class CastType {
 
+  public static final CastType ARRAY = new CastType("ARRAY");
   public static final CastType GEOM = new CastType("GEOM");
   public static final CastType JSONB = new CastType("JSONB");
   public static final CastType INTERVAL = new CastType("INTERVAL");

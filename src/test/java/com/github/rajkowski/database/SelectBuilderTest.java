@@ -75,6 +75,23 @@ public class SelectBuilderTest extends TestCase {
         assertEquals("%invoice%", spec.getParameters().get(3));
     }
 
+    public void testSelectBuilderSupportsAnyConditionWithStringArrayCastType() {
+        String[] extensions = Arrays.stream(new String[] { "PDF", "JPG" })
+                .map(String::toLowerCase)
+                .toArray(String[]::new);
+
+        QuerySpec spec = DB.SELECT("id")
+                .FROM("files")
+                .WHERE("LOWER(files.filename) = ?", "report.pdf")
+                .AND("LOWER(files.extension) = ANY(?)", extensions, CastType.ARRAY);
+
+        assertEquals(
+                "SELECT id FROM files WHERE LOWER(files.filename) = ? AND LOWER(files.extension) = ANY(?)",
+                spec.getSql());
+        assertEquals("report.pdf", spec.getParameters().get(0));
+        assertSame(extensions, spec.getParameters().get(1));
+    }
+
     public void testSelectBuilderCanBeBuiltOutOfOrderAndColumnsCanBeAddedLater() {
         Select builder = DB.SELECT();
         builder.FROM("users");

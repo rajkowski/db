@@ -133,7 +133,9 @@ public class Field {
     this.name = name;
     this.value = value;
     this.castType = castType;
-    if (CastType.JSONB.equals(castType)) {
+    if (CastType.ARRAY.equals(castType)) {
+      this.sqlType = Types.ARRAY;
+    } else if (CastType.JSONB.equals(castType)) {
       this.sqlType = Types.VARCHAR;
     } else if (CastType.INTERVAL.equals(castType)) {
       this.sqlType = Types.OTHER;
