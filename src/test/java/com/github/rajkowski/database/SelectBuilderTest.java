@@ -120,6 +120,18 @@ public class SelectBuilderTest extends TestCase {
         assertEquals(Arrays.asList("value", 42), spec.getParameters());
     }
 
+        public void testSelectBuilderSupportsLeftJoins() {
+                QuerySpec spec = DB.SELECT("users.id", "profiles.display_name")
+                                .FROM("users")
+                                .LEFT_JOIN("profiles").ON("users.id = profiles.user_id")
+                                .WHERE("users.active = ?", true);
+
+                assertEquals(
+                                "SELECT users.id, profiles.display_name FROM users LEFT JOIN profiles ON users.id = profiles.user_id WHERE users.active = ?",
+                                spec.getSql());
+                assertEquals(Arrays.asList(true), spec.getParameters());
+        }
+
     public void testSelectBuilderSupportsDerivedTableFromUnionSubquery() {
         Select subquery = DB.SELECT("jsonb_array_elements_text(tags) AS tag")
                 .FROM("web_pages")

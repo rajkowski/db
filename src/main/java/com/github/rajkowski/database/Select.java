@@ -255,6 +255,34 @@ public class Select extends QuerySpec {
   }
 
   /**
+   * Adds a LEFT JOIN clause to the query.
+   *
+   * @param table the table or table alias to join with
+   * @return this builder for chaining
+   */
+  public Select LEFT_JOIN(String table) {
+    String sanitized = sanitizeJoinTable(table);
+    if (pendingJoin != null) {
+      joinClauses.add(pendingJoin);
+    }
+    pendingJoin = "LEFT JOIN " + sanitized;
+    return this;
+  }
+
+  /**
+   * Adds a LEFT JOIN clause to the query.
+   *
+   * @param table the table to join with
+   * @return this builder for chaining
+   */
+  public Select LEFT_JOIN(Table table) {
+    if (table == null) {
+      throw new IllegalArgumentException("Table cannot be null.");
+    }
+    return LEFT_JOIN(table.getName());
+  }
+
+  /**
    * Adds the ON condition for the most recently added JOIN.
    *
    * @param clause the join condition such as x.id = y.id
