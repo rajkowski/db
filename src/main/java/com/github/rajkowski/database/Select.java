@@ -352,11 +352,11 @@ public class Select extends QuerySpec {
    *
    * @param clause the filter clause using ? placeholders
    * @param value the current runtime value to evaluate
-   * @param skipValue the value that should suppress the clause when matched
+   * @param comparisonValue the value that should suppress the clause when matched
    * @return this builder for chaining
    */
-  public Select WHERE_SKIP_IF_MATCHES(String clause, Object value, Object skipValue) {
-    if (shouldSkipCondition(value, skipValue)) {
+  public Select WHERE_SKIP_IF_MATCHES(String clause, Object value, Object comparisonValue) {
+    if (shouldSkipCondition(value, comparisonValue)) {
       return this;
     }
     return WHERE(clause, value);
@@ -374,15 +374,15 @@ public class Select extends QuerySpec {
   }
 
   /**
-   * Appends an AND clause only when the supplied value does not match the caller's skip value.
+   * Appends an AND clause only when the supplied value does not match the caller's comparison value.
    *
    * @param clause the filter clause using ? placeholders
    * @param value the current runtime value to evaluate
-   * @param skipValue the value that should suppress the clause when matched
+   * @param comparisonValue the value that should suppress the clause when matched
    * @return this builder for chaining
    */
-  public Select AND_SKIP_IF_MATCHES(String clause, Object value, Object skipValue) {
-    if (shouldSkipCondition(value, skipValue)) {
+  public Select AND_SKIP_IF_MATCHES(String clause, Object value, Object comparisonValue) {
+    if (shouldSkipCondition(value, comparisonValue)) {
       return this;
     }
     return AND(clause, value);
