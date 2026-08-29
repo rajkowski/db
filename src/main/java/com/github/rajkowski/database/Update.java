@@ -37,6 +37,7 @@ public class Update extends QuerySpec {
     super.METRICS(metrics);
     return this;
   }
+
   private final List<String> whereClauses = new ArrayList<>();
   private final List<Object> setValues = new ArrayList<>();
   private final List<Object> whereValues = new ArrayList<>();
@@ -262,6 +263,27 @@ public class Update extends QuerySpec {
       return SET(name, (String) null);
     }
     throw new IllegalArgumentException("Unsupported field value type: " + value.getClass().getName());
+  }
+
+  public Update SET_UNLESS_NULL(String name, Object value) {
+    if (value == null) {
+      return this;
+    }
+    return SET(name, value);
+  }
+
+  public Update SET_WHEN_MATCHES(String name, Object value, Object comparisonValue) {
+    if (value == null || (comparisonValue != null && !value.equals(comparisonValue))) {
+      return this;
+    }
+    return SET(name, value);
+  }
+
+  public Update SET_UNLESS_MATCHES(String name, Object value, Object nullComparisonValue) {
+    if (value == null || (nullComparisonValue != null && value.equals(nullComparisonValue))) {
+      return this;
+    }
+    return SET(name, value);
   }
 
   /**
