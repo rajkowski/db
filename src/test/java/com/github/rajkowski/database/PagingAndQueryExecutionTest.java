@@ -15,6 +15,7 @@
  */
 package com.github.rajkowski.database;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.Arrays;
@@ -103,6 +104,29 @@ public class PagingAndQueryExecutionTest extends TestCase {
             assertEquals(Collections.singletonList("alice"), names);
             assertEquals("alice", firstName);
             assertEquals(Collections.singletonList("alice"), result.getRecords());
+        }
+    }
+
+    public void testReturnValueConvertsNumericAggregateToLong() throws Exception {
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl("jdbc:h2:mem:" + uniqueDbName("db_return_value_numeric") + ";DB_CLOSE_DELAY=-1");
+        config.setDriverClassName("org.h2.Driver");
+        config.setUsername("sa");
+        config.setPassword("");
+
+        try (HikariDataSource dataSource = new HikariDataSource(config)) {
+            DB.setDataSource(dataSource);
+
+            try (Connection connection = dataSource.getConnection();
+                    PreparedStatement statement = connection
+                            .prepareStatement("CREATE TABLE files (file_length DECIMAL(19, 0))")) {
+                statement.executeUpdate();
+            }
+
+            DB.INSERT().INTO("files").FIELD("file_length", new BigDecimal("1234567890123")).execute();
+
+            assertEquals(Long.valueOf(1234567890123L),
+                    DB.SELECT("SUM(file_length)").FROM("files").returnValue(Long.class));
         }
     }
 
