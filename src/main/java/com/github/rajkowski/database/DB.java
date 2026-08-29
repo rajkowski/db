@@ -938,6 +938,9 @@ public final class DB {
       if (value == null) {
         return null;
       }
+      if (value instanceof Number number && type == Long.class) {
+        return type.cast(number.longValue());
+      }
       if (type.isInstance(value)) {
         return type.cast(value);
       }
