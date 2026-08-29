@@ -310,6 +310,20 @@ public class Insert extends QuerySpec {
     throw new IllegalArgumentException("Unsupported field value type: " + value.getClass().getName());
   }
 
+  public Insert FIELD_UNLESS_NULL(String name, Object value) {
+    if (value == null) {
+      return this;
+    }
+    return FIELD(name, value);
+  }
+
+  public Insert FIELD_UNLESS_MATCHES(String name, Object value, Object nullComparisonValue) {
+    if (value == null || (nullComparisonValue != null && value.equals(nullComparisonValue))) {
+      return this;
+    }
+    return FIELD(name, value);
+  }
+
   /**
    * Executes the insert and returns the generated key value.
    *
