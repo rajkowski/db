@@ -159,7 +159,8 @@ public class Field {
     this.castType = castType;
     if (CastType.GEOM.equals(castType)) {
       if (latitude == 0 && longitude == 0) {
-        this.value = "NULL";
+        this.value = null;
+        this.isNull = true;
       } else {
         this.value = "ST_SetSRID(ST_MakePoint(" + latitude + ", " + longitude + "), 4326)";
       }
