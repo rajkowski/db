@@ -72,6 +72,15 @@ public class InsertBuilderTest extends TestCase {
         assertEquals(Arrays.asList("alice", false, 42L), spec.getParameters());
     }
 
+    public void testInsertBuilderSupportsPostgisPoints() {
+        QuerySpec spec = DB.INSERT()
+                .INTO("locations")
+                .POINT("geom", 45.0d, -93.0d);
+
+        assertEquals("INSERT INTO locations (geom) VALUES (ST_SetSRID(ST_MakePoint(45.0, -93.0), 4326))", spec.getSql());
+        assertTrue(spec.getParameters().isEmpty());
+    }
+
     public void testInsertBuilderSupportsJsonbCastFields() {
         QuerySpec spec = DB.INSERT()
                 .INTO("web_pages")

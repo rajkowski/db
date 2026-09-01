@@ -148,13 +148,7 @@ public class Field {
     }
   }
 
-  public Field(String name, Object[] objectValues) {
-    this.name = name;
-    this.value = objectValues;
-    this.sqlType = Types.JAVA_OBJECT;
-  }
-
-  public Field(String name, CastType castType, double latitude, double longitude) {
+  public Field(String name, double latitude, double longitude, CastType castType) {
     this.name = name;
     this.castType = castType;
     if (CastType.GEOM.equals(castType)) {
@@ -167,6 +161,12 @@ public class Field {
       this.sqlType = Types.OTHER;
     }
     this.hasValue = false;
+  }
+
+  public Field(String name, Object[] objectValues) {
+    this.name = name;
+    this.value = objectValues;
+    this.sqlType = Types.JAVA_OBJECT;
   }
 
   public String getName() {

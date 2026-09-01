@@ -80,6 +80,15 @@ public class UpdateBuilderTest extends TestCase {
         assertEquals(Arrays.asList("alice", false, 10L), spec.getParameters());
     }
 
+    public void testUpdateBuilderSupportsPostgisPoints() {
+        QuerySpec spec = DB.UPDATE("locations")
+                .POINT("geom", 45.0d, -93.0d)
+                .WHERE("location_id = ?", 12L);
+
+        assertEquals("UPDATE locations SET geom = ST_SetSRID(ST_MakePoint(45.0, -93.0), 4326) WHERE location_id = ?", spec.getSql());
+        assertEquals(Arrays.asList(12L), spec.getParameters());
+    }
+
     public void testUpdateBuilderSupportsJsonbCastAssignments() {
         QuerySpec spec = DB.UPDATE("web_pages")
                 .SET("tags", "[\"home\",\"news\"]", CastType.JSONB)

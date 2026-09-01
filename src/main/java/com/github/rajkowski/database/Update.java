@@ -78,7 +78,9 @@ public class Update extends QuerySpec {
         continue;
       }
       setFields.add(field);
-      setValues.add(readFieldValue(field));
+      if (field.hasValue()) {
+        setValues.add(readFieldValue(field));
+      }
     }
     return this;
   }
@@ -181,6 +183,18 @@ public class Update extends QuerySpec {
    */
   public Update SET(String name, Double value) {
     return value == null ? SET(name, (String) null) : SET(new Field(name, value.doubleValue()));
+  }
+
+  /**
+   * Assigns a PostGIS point field using latitude and longitude coordinates.
+   *
+   * @param name the geometry column name
+   * @param latitude the point latitude
+   * @param longitude the point longitude
+   * @return this builder for chaining
+   */
+  public Update POINT(String name, double latitude, double longitude) {
+    return SET(new Field(name, latitude, longitude, CastType.GEOM));
   }
 
   /**
@@ -535,7 +549,8 @@ public class Update extends QuerySpec {
         }
         Field field = setFields.get(i);
         if (field != null) {
-          assignments.append(sanitizeIdentifier(field.getName())).append(" = ?");
+          assignments.append(sanitizeIdentifier(field.getName())).append(" = ")
+              .append(field.hasValue() ? "?" : field.getValue());
         }
       }
       for (int i = 0; i < rawSetClauses.size(); i++) {

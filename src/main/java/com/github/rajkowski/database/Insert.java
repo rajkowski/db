@@ -99,7 +99,9 @@ public class Insert extends QuerySpec {
         continue;
       }
       insertEntries.add(field);
-      parameters.add(readFieldValue(field));
+      if (field.hasValue()) {
+        parameters.add(readFieldValue(field));
+      }
     }
     return this;
   }
@@ -226,6 +228,18 @@ public class Insert extends QuerySpec {
    */
   public Insert FIELD(String name, Double value) {
     return value == null ? FIELD(name, (String) null) : FIELDS(new Field(name, value.doubleValue()));
+  }
+
+  /**
+   * Adds a PostGIS point field using latitude and longitude coordinates.
+   *
+   * @param name the geometry column name
+   * @param latitude the point latitude
+   * @param longitude the point longitude
+   * @return this builder for chaining
+   */
+  public Insert POINT(String name, double latitude, double longitude) {
+    return FIELDS(new Field(name, latitude, longitude, CastType.GEOM));
   }
 
   /**
@@ -482,7 +496,7 @@ public class Insert extends QuerySpec {
         if (entry instanceof Field) {
           Field field = (Field) entry;
           columnNames.append(sanitizeIdentifier(field.getName()));
-          values.append("?");
+          values.append(field.hasValue() ? "?" : field.getValue());
         } else if (entry instanceof RawField) {
           RawField rawField = (RawField) entry;
           columnNames.append(rawField.columnName);

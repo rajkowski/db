@@ -66,7 +66,7 @@ public class FieldTest extends TestCase {
   }
 
   public void testGeometryFieldUsesCastType() {
-    Field geomField = new Field("location", CastType.GEOM, 12.5d, 45.0d);
+    Field geomField = new Field("location", 12.5d, 45.0d, CastType.GEOM);
 
     assertEquals("ST_SetSRID(ST_MakePoint(12.5, 45.0), 4326)", geomField.getValue());
     assertFalse(geomField.hasValue());
