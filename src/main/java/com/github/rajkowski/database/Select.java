@@ -441,6 +441,23 @@ public class Select extends QuerySpec {
   }
 
   /**
+   * Adds a parameterized ORDER BY clause to the SELECT query.
+   *
+   * @param clause the ordering expression to apply, using ? placeholders for parameters
+   * @param values the values bound to the clause
+   * @return this builder for chaining
+   */
+  public Select ORDER_BY(String clause, Object... values) {
+    this.orderByClause = sanitizeOrderBy(clause);
+    if (values != null) {
+      for (Object value : values) {
+        parameters.add(value);
+      }
+    }
+    return this;
+  }
+
+  /**
    * Applies a sort specification from the supplied constraints object.
    *
    * @param constraints the sorting and paging metadata to apply

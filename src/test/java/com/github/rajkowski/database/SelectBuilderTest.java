@@ -222,4 +222,24 @@ public class SelectBuilderTest extends TestCase {
         assertEquals("NOT (web_pages.tags @> ?::jsonb OR web_pages.tags @> ?::jsonb)", condition.sql());
         assertEquals(Arrays.asList("[\"news\"]", "[\"featured\"]"), Arrays.asList(condition.values()));
     }
+
+    public void testSelectBuilderSupportsParameterizedOrderBy() {
+        QuerySpec spec = DB.SELECT("id", "geom")
+                .FROM("zip_codes")
+                .WHERE("active = ?", true)
+                .ORDER_BY("geom <-> (SELECT geom FROM zip_codes WHERE code = ?)", "12345");
+
+        assertEquals("SELECT id, geom FROM zip_codes WHERE active = ? ORDER BY geom <-> (SELECT geom FROM zip_codes WHERE code = ?)", spec.getSql());
+        assertEquals(Arrays.asList(true, "12345"), spec.getParameters());
+    }
+
+    public void testSelectBuilderSupportsParameterizedOrderByWithMultipleValues() {
+        QuerySpec spec = DB.SELECT("id", "name")
+                .FROM("users")
+                .WHERE("status = ?", "active")
+                .ORDER_BY("CASE WHEN role = ? THEN ? ELSE ? END DESC", "admin", 1, 2);
+
+        assertEquals("SELECT id, name FROM users WHERE status = ? ORDER BY CASE WHEN role = ? THEN ? ELSE ? END DESC", spec.getSql());
+        assertEquals(Arrays.asList("active", "admin", 1, 2), spec.getParameters());
+    }
 }
