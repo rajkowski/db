@@ -31,6 +31,7 @@ import javax.sql.DataSource;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.postgresql.util.PGInterval;
 import org.postgresql.util.PGobject;
 
 /**
@@ -659,7 +660,7 @@ public final class DB {
     if (value == null || resultSet.wasNull()) {
       return null;
     }
-    if (!(value instanceof org.postgresql.util.PGInterval pgi)) {
+    if (!(value instanceof PGInterval pgi)) {
       return value.toString();
     }
     StringBuilder sb = new StringBuilder("P");

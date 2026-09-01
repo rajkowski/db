@@ -19,10 +19,11 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
-
-import org.postgresql.util.PGobject;
 import java.util.List;
 import java.util.Locale;
+
+import org.postgresql.util.PGInterval;
+import org.postgresql.util.PGobject;
 
 /**
  * Represents a SQL query specification, including the SQL text, bound parameters, and execution metrics.
@@ -504,6 +505,13 @@ public class QuerySpec {
         return jsonb;
       } catch (SQLException e) {
         throw new IllegalArgumentException("Invalid JSONB value: " + jsonValue, e);
+      }
+    }
+    if (field.getCastType() == CastType.INTERVAL) {
+      try {
+        return new PGInterval(field.getStringValue());
+      } catch (SQLException e) {
+        throw new IllegalArgumentException("Invalid interval value: " + field.getStringValue(), e);
       }
     }
     if (field.getStringValue() != null) {

@@ -92,6 +92,17 @@ public class UpdateBuilderTest extends TestCase {
         assertEquals(12L, spec.getParameters().get(1));
     }
 
+    public void testUpdateBuilderSupportsIntervalCastAssignments() {
+        QuerySpec spec = DB.UPDATE("jobs")
+                .SET("queue_interval", "PT5M", CastType.INTERVAL)
+                .WHERE("job_id = ?", 12L);
+
+        assertEquals("UPDATE jobs SET queue_interval = ? WHERE job_id = ?", spec.getSql());
+        assertTrue(spec.getParameters().get(0) instanceof org.postgresql.util.PGInterval);
+        assertEquals("5 mins", spec.getParameters().get(0).toString());
+        assertEquals(12L, spec.getParameters().get(1));
+    }
+
     public void testUpdateBuilderSupportsFluentAndClauses() {
         QuerySpec spec = DB.UPDATE("users")
                 .SET("name", "alice")
