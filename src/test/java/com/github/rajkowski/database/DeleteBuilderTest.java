@@ -50,6 +50,16 @@ public class DeleteBuilderTest extends TestCase {
         assertEquals(Arrays.asList(42L), spec.getParameters());
     }
 
+    public void testDeleteBuilderAddsAndClauseAndParameters() {
+        QuerySpec spec = DB.DELETE()
+                .FROM("items")
+                .WHERE("item_id = ?", 42L)
+                .AND("category_id = ?", 7L);
+
+        assertEquals("DELETE FROM items WHERE item_id = ? AND category_id = ?", spec.getSql());
+        assertEquals(Arrays.asList(42L, 7L), spec.getParameters());
+    }
+
     public void testDeleteBuilderCanSetTableLater() {
         QuerySpec spec = new Delete()
                 .WHERE("id = ?", 42L)

@@ -85,6 +85,17 @@ public class Delete extends QuerySpec {
     return this;
   }
 
+  /**
+   * Adds an AND condition to the delete statement.
+   *
+   * @param clause the filter clause using ? placeholders
+   * @param values the values bound to the clause
+   * @return this builder for chaining
+   */
+  public Delete AND(String clause, Object... values) {
+    return WHERE(clause, values);
+  }
+
   @Override
   public Boolean execute() {
     try {
