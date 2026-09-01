@@ -193,8 +193,8 @@ public class Update extends QuerySpec {
    * @param longitude the point longitude
    * @return this builder for chaining
    */
-  public Update POINT(String name, double latitude, double longitude) {
-    return SET(new Field(name, latitude, longitude, CastType.GEOM));
+  public Update SET(String name, double latitude, double longitude, CastType castType) {
+    return SET(new Field(name, latitude, longitude, castType));
   }
 
   /**

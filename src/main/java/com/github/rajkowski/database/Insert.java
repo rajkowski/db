@@ -238,8 +238,8 @@ public class Insert extends QuerySpec {
    * @param longitude the point longitude
    * @return this builder for chaining
    */
-  public Insert POINT(String name, double latitude, double longitude) {
-    return FIELDS(new Field(name, latitude, longitude, CastType.GEOM));
+  public Insert SET(String name, double latitude, double longitude, CastType castType) {
+    return FIELDS(new Field(name, latitude, longitude, castType));
   }
 
   /**
