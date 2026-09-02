@@ -78,13 +78,35 @@ public class TransactionAndSafetyTest extends TestCase {
         assertEquals(42, spec.getParameters().get(0));
     }
 
-    public void testRejectsLiteralSqlValues() {
+    public void testAllowsBooleanSqlLiterals() {
+        QuerySpec spec = DB.SELECT("id").FROM("users").WHERE("active = true");
+
+        assertEquals("SELECT id FROM users WHERE active = true", spec.getSql());
+    }
+
+    public void testRejectsNumericLiteralSqlValues() {
         try {
-            DB.SELECT("id").FROM("users").WHERE("active = true");
+            DB.SELECT("id").FROM("users").WHERE("id = 1");
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException expected) {
             assertTrue(expected.getMessage().contains("parameterized"));
         }
+    }
+
+    public void testAllowsNestedExistsWithBooleanConditionsAndBoundParameters() {
+        String clause = "(collections.allows_guests = true OR (has_allowed_groups = true AND "
+                + "EXISTS (SELECT 1 FROM collection_groups WHERE collection_groups.collection_id = "
+                + "collections.collection_id AND view_all = true AND EXISTS (SELECT 1 FROM user_groups "
+                + "WHERE user_groups.group_id = collection_groups.group_id AND user_id = ?)) OR "
+                + "EXISTS (SELECT 1 FROM members WHERE items.item_id = members.item_id AND user_id = ? "
+                + "AND approved IS NOT NULL)))";
+
+        QuerySpec spec = DB.SELECT("items.item_id").FROM("items").WHERE(clause, 7, 7);
+
+        assertEquals("SELECT items.item_id FROM items WHERE " + clause, spec.getSql());
+        assertEquals(2, spec.getParameters().size());
+        assertEquals(7, spec.getParameters().get(0));
+        assertEquals(7, spec.getParameters().get(1));
     }
 
     public void testUsesThreadLocalConnectionWhenPresent() throws Exception {

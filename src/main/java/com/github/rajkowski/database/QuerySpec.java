@@ -342,8 +342,7 @@ public class QuerySpec {
     }
     String withoutQuotedLiterals = normalized.replaceAll("'([^']|'')*'", " ");
     String withoutSubqueries = stripSubqueryBodies(withoutQuotedLiterals);
-    if (withoutSubqueries.matches(".*(?i)(^|[^A-Za-z0-9_])(true|false)(?=$|[^A-Za-z0-9_]).*")
-        || withoutSubqueries.matches(".*(^|[^A-Za-z_])\\d+(?:\\.\\d+)?(?=$|[^A-Za-z0-9_]).*")) {
+    if (withoutSubqueries.matches(".*(^|[^A-Za-z_])\\d+(?:\\.\\d+)?(?=$|[^A-Za-z0-9_]).*")) {
       throw unsafeConditionClause(clause);
     }
     return normalized;
