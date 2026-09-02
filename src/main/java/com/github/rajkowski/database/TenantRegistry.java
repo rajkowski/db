@@ -16,6 +16,7 @@
 package com.github.rajkowski.database;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.sql.DataSource;
@@ -86,5 +87,14 @@ public class TenantRegistry {
       throw new IllegalArgumentException("Tenant id cannot be null or blank");
     }
     return dataSources.containsKey(tenantId);
+  }
+
+  /**
+   * Returns the set of tenant identifiers that have datasources registered.
+   *
+   * @return an unmodifiable set of tenant identifiers
+   */
+  public Set<String> getTenantIds() {
+    return Set.copyOf(dataSources.keySet());
   }
 }
