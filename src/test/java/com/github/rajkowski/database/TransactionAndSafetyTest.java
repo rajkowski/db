@@ -18,6 +18,7 @@ package com.github.rajkowski.database;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Set;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -28,6 +29,60 @@ public class TransactionAndSafetyTest extends TestCase {
 
     private static String uniqueDbName(String baseName) {
         return baseName + "_" + System.nanoTime();
+    }
+
+    private static HikariDataSource createDataSource(String baseName) {
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl("jdbc:h2:mem:" + uniqueDbName(baseName) + ";DB_CLOSE_DELAY=-1");
+        config.setDriverClassName("org.h2.Driver");
+        config.setUsername("sa");
+        config.setPassword("");
+        config.setMaximumPoolSize(2);
+        config.setMinimumIdle(1);
+        return new HikariDataSource(config);
+    }
+
+    public void testTenantRegistryFacadeRegistersAndListsTenantDataSources() {
+        HikariDataSource primary = createDataSource("db_tenant_registry_facade_primary");
+        HikariDataSource replacement = createDataSource("db_tenant_registry_facade_replacement");
+
+        try {
+            DB.setTenantRegistry(new TenantRegistry());
+            assertTrue(DB.getTenantIds().isEmpty());
+
+            DB.registerTenantDataSource("tenant-a", primary);
+            DB.registerTenantDataSource("tenant-b", replacement);
+
+            Set<String> tenantIds = DB.getTenantIds();
+            assertEquals(2, tenantIds.size());
+            assertTrue(tenantIds.contains("tenant-a"));
+            assertTrue(tenantIds.contains("tenant-b"));
+            try {
+                tenantIds.add("tenant-c");
+                fail("Tenant ID snapshot must be immutable");
+            } catch (UnsupportedOperationException expected) {
+                // Expected: callers cannot mutate registry state through the returned collection.
+            }
+
+            DB.registerTenantDataSource("tenant-a", replacement);
+            assertSame(replacement, DB.getTenantRegistry().getDataSource("tenant-a"));
+
+            try {
+                DB.registerTenantDataSource("", primary);
+                fail("Expected IllegalArgumentException for blank tenant id");
+            } catch (IllegalArgumentException expected) {
+                assertEquals("Tenant id cannot be null or blank", expected.getMessage());
+            }
+            try {
+                DB.registerTenantDataSource("tenant-c", null);
+                fail("Expected IllegalArgumentException for null datasource");
+            } catch (IllegalArgumentException expected) {
+                assertEquals("DataSource cannot be null", expected.getMessage());
+            }
+        } finally {
+            primary.close();
+            replacement.close();
+        }
     }
 
     public void testRejectsUnsafeTableIdentifier() {

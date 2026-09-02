@@ -19,7 +19,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -51,7 +53,8 @@ public class ConcurrencyTest extends TestCase {
 
     private static void createUsersTable(DataSource dataSource) throws SQLException {
         try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement("CREATE TABLE users (id INTEGER PRIMARY KEY, name VARCHAR(50))")) {
+                PreparedStatement statement = connection
+                        .prepareStatement("CREATE TABLE users (id INTEGER PRIMARY KEY, name VARCHAR(50))")) {
             statement.executeUpdate();
         }
     }
@@ -224,6 +227,62 @@ public class ConcurrencyTest extends TestCase {
             assertNull(DB.getThreadLocalConnection());
         } finally {
             executor.shutdownNow();
+            primary.close();
+            secondary.close();
+        }
+    }
+
+    public void testTenantRegistryReturnsSnapshotOfRegisteredTenantIds() {
+        HikariDataSource primary = createDataSource("db_registry_primary");
+        HikariDataSource secondary = createDataSource("db_registry_secondary");
+
+        try {
+            TenantRegistry registry = new TenantRegistry();
+            registry.register("tenant-a", primary);
+            registry.register("tenant-b", secondary);
+
+            Set<String> tenantIds = registry.getTenantIds();
+
+            assertEquals(2, tenantIds.size());
+            assertTrue(tenantIds.containsAll(Arrays.asList("tenant-a", "tenant-b")));
+            try {
+                tenantIds.add("tenant-c");
+                fail("Tenant ID snapshot must be immutable");
+            } catch (UnsupportedOperationException expected) {
+                // Expected: callers cannot mutate registry state through the returned collection.
+            }
+            registry.unregister("tenant-a");
+            assertTrue(tenantIds.contains("tenant-a"));
+        } finally {
+            primary.close();
+            secondary.close();
+        }
+    }
+
+    public void testTenantContextIsRestoredAfterNestedTenantScope() {
+        HikariDataSource primary = createDataSource("db_nested_tenant_primary");
+        HikariDataSource secondary = createDataSource("db_nested_tenant_secondary");
+
+        try {
+            TenantRegistry registry = new TenantRegistry();
+            registry.register("tenant-a", primary);
+            registry.register("tenant-b", secondary);
+            DB.setTenantRegistry(registry);
+
+            DB.withTenant("tenant-a", () -> {
+                assertEquals("tenant-a", DB.getTenantId());
+                assertSame(primary, DB.getDataSource());
+                DB.withTenant("tenant-b", () -> {
+                    assertEquals("tenant-b", DB.getTenantId());
+                    assertSame(secondary, DB.getDataSource());
+                });
+                assertEquals("tenant-a", DB.getTenantId());
+                assertSame(primary, DB.getDataSource());
+            });
+
+            assertNull(DB.getTenantId());
+            assertNull(DB.getTenantDataSource());
+        } finally {
             primary.close();
             secondary.close();
         }

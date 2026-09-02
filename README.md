@@ -281,6 +281,15 @@ DB.withDataSource(dataSource, () -> {
 
 For multi-tenant systems, create a tenant registry at application startup and register one datasource per tenant. The application can then select the tenant for the current web request and let all subsequent database operations resolve against that tenant's datasource until the request finishes.
 
+Applications can register and inspect tenant sources through the `DB` facade while keeping registry storage encapsulated:
+
+```java
+DB.registerTenantDataSource("tenant-42", tenantDataSourceA);
+Set<String> tenantIds = DB.getTenantIds();
+```
+
+`getTenantIds()` returns an immutable snapshot. Registering an existing tenant replaces only that tenant's current datasource; the caller remains responsible for any datasource lifecycle outside the registry.
+
 ```java
 TenantRegistry registry = new TenantRegistry();
 registry.register("tenant-42", tenantDataSourceA);

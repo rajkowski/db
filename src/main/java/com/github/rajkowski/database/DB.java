@@ -26,6 +26,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import javax.sql.DataSource;
 
@@ -96,6 +97,25 @@ public final class DB {
    */
   public static TenantRegistry getTenantRegistry() {
     return tenantRegistry;
+  }
+
+  /**
+   * Registers a datasource for a tenant in the configured tenant registry.
+   *
+   * @param tenantId the tenant identifier to associate with the datasource
+   * @param dataSource the datasource for tenant-scoped database operations
+   */
+  public static void registerTenantDataSource(String tenantId, DataSource dataSource) {
+    tenantRegistry.register(tenantId, dataSource);
+  }
+
+  /**
+   * Returns the tenant identifiers currently registered for datasource resolution.
+   *
+   * @return an immutable snapshot of registered tenant identifiers
+   */
+  public static Set<String> getTenantIds() {
+    return tenantRegistry.getTenantIds();
   }
 
   /**
