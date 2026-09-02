@@ -26,9 +26,13 @@ import java.util.Locale;
 @SuppressWarnings("java:S100")
 public class Select extends QuerySpec {
   private final List<String> selectExpressions = new ArrayList<>();
+  private final List<List<Object>> selectExpressionParameters = new ArrayList<>();
   private String fromTable;
+  private List<Object> fromParameters = new ArrayList<>();
   private final List<String> joinClauses = new ArrayList<>();
+  private final List<List<Object>> joinClauseParameters = new ArrayList<>();
   private final List<String> unionClauses = new ArrayList<>();
+  private final List<List<Object>> unionClauseParameters = new ArrayList<>();
   private String pendingJoin;
 
   @Override
@@ -37,7 +41,9 @@ public class Select extends QuerySpec {
     return this;
   }
   private final List<String> whereClauses = new ArrayList<>();
+  private final List<List<Object>> whereClauseParameters = new ArrayList<>();
   private String orderByClause;
+  private List<Object> orderByParameters = new ArrayList<>();
   private Paging paging;
   private DataConstraints dataConstraints;
   private String countSql;
@@ -59,6 +65,7 @@ public class Select extends QuerySpec {
   public Select(String... columns) {
     if (columns == null || columns.length == 0) {
       selectExpressions.add("*");
+      selectExpressionParameters.add(new ArrayList<>());
       return;
     }
     SELECT(columns);
@@ -82,13 +89,17 @@ public class Select extends QuerySpec {
       String sanitized = sanitizeSelectExpression(column);
       if (sanitized.equals("*")) {
         selectExpressions.clear();
+        selectExpressionParameters.clear();
         selectExpressions.add("*");
+        selectExpressionParameters.add(new ArrayList<>());
         return this;
       }
       if (selectExpressions.size() == 1 && selectExpressions.get(0).equals("*")) {
         selectExpressions.clear();
+        selectExpressionParameters.clear();
       }
       selectExpressions.add(sanitized);
+      selectExpressionParameters.add(new ArrayList<>());
     }
     return this;
   }
@@ -102,15 +113,12 @@ public class Select extends QuerySpec {
    */
   public Select SELECT(String expression, Object... values) {
     String sanitized = sanitizeSelectExpression(expression);
-    if (values != null && values.length > 0) {
-      for (Object value : values) {
-        parameters.add(value);
-      }
-    }
     if (selectExpressions.size() == 1 && selectExpressions.get(0).equals("*")) {
       selectExpressions.clear();
+      selectExpressionParameters.clear();
     }
     selectExpressions.add(sanitized);
+    selectExpressionParameters.add(toParameterList(values));
     return this;
   }
 
@@ -122,6 +130,7 @@ public class Select extends QuerySpec {
    */
   public Select FROM(String table) {
     this.fromTable = sanitizeIdentifier(table);
+    this.fromParameters = new ArrayList<>();
     return this;
   }
 
@@ -175,7 +184,7 @@ public class Select extends QuerySpec {
       derivedTable += " AS " + sanitizeDerivedTableAlias(alias.getAlias());
     }
     this.fromTable = derivedTable;
-    this.parameters.addAll(subquery.getParameters());
+    this.fromParameters = new ArrayList<>(subquery.getParameters());
     return this;
   }
 
@@ -236,6 +245,7 @@ public class Select extends QuerySpec {
     String sanitized = sanitizeJoinTable(table);
     if (pendingJoin != null) {
       joinClauses.add(pendingJoin);
+      joinClauseParameters.add(new ArrayList<>());
     }
     pendingJoin = "JOIN " + sanitized;
     return this;
@@ -264,6 +274,7 @@ public class Select extends QuerySpec {
     String sanitized = sanitizeJoinTable(table);
     if (pendingJoin != null) {
       joinClauses.add(pendingJoin);
+      joinClauseParameters.add(new ArrayList<>());
     }
     pendingJoin = "LEFT JOIN " + sanitized;
     return this;
@@ -296,12 +307,8 @@ public class Select extends QuerySpec {
     String normalized = sanitizeJoinCondition(clause);
     pendingJoin = pendingJoin + " ON " + normalized;
     joinClauses.add(pendingJoin);
+    joinClauseParameters.add(toParameterList(values));
     pendingJoin = null;
-    if (values != null) {
-      for (Object value : values) {
-        parameters.add(value);
-      }
-    }
     return this;
   }
 
@@ -437,6 +444,7 @@ public class Select extends QuerySpec {
    */
   public Select ORDER_BY(String clause) {
     this.orderByClause = sanitizeOrderBy(clause);
+    this.orderByParameters = new ArrayList<>();
     return this;
   }
 
@@ -449,11 +457,7 @@ public class Select extends QuerySpec {
    */
   public Select ORDER_BY(String clause, Object... values) {
     this.orderByClause = sanitizeOrderBy(clause);
-    if (values != null) {
-      for (Object value : values) {
-        parameters.add(value);
-      }
-    }
+    this.orderByParameters = toParameterList(values);
     return this;
   }
 
@@ -655,7 +659,7 @@ public class Select extends QuerySpec {
       throw new IllegalArgumentException("Query cannot be null.");
     }
     unionClauses.add(operator + " " + otherQuery.getSql());
-    this.parameters.addAll(otherQuery.getParameters());
+    unionClauseParameters.add(new ArrayList<>(otherQuery.getParameters()));
     return this;
   }
 
@@ -692,14 +696,45 @@ public class Select extends QuerySpec {
       }
     }
     whereClauses.add(normalized);
+    whereClauseParameters.add(toParameterList(values));
+  }
+
+  private List<Object> toParameterList(Object... values) {
+    List<Object> result = new ArrayList<>();
     if (values != null) {
       for (Object value : values) {
-        parameters.add(value);
+        result.add(value);
       }
     }
+    return result;
+  }
+
+  @Override
+  public List<Object> getParameters() {
+    rebuildParameters();
+    return super.getParameters();
+  }
+
+  private void rebuildParameters() {
+    parameters.clear();
+    for (List<Object> expressionValues : selectExpressionParameters) {
+      parameters.addAll(expressionValues);
+    }
+    parameters.addAll(fromParameters);
+    for (List<Object> joinValues : joinClauseParameters) {
+      parameters.addAll(joinValues);
+    }
+    for (List<Object> conditionValues : whereClauseParameters) {
+      parameters.addAll(conditionValues);
+    }
+    for (List<Object> unionValues : unionClauseParameters) {
+      parameters.addAll(unionValues);
+    }
+    parameters.addAll(orderByParameters);
   }
 
   private String buildSql(boolean includePaging) {
+    rebuildParameters();
     StringBuilder builder = new StringBuilder();
     if (selectExpressions.isEmpty()) {
       builder.append("SELECT *");

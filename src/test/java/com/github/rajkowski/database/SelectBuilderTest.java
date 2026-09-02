@@ -242,4 +242,19 @@ public class SelectBuilderTest extends TestCase {
         assertEquals("SELECT id, name FROM users WHERE status = ? ORDER BY CASE WHEN role = ? THEN ? ELSE ? END DESC", spec.getSql());
         assertEquals(Arrays.asList("active", "admin", 1, 2), spec.getParameters());
     }
+
+        public void testSelectBuilderOrdersParametersByGeneratedSqlWhenBuiltOutOfOrder() {
+                Select builder = DB.SELECT().FROM("users");
+                builder.SELECT("COALESCE(?, id) AS first_value", 1)
+                                .AND("enabled = ?", 2)
+                                .ORDER_BY("CASE WHEN priority = ? THEN id END", 3)
+                                .AND("role_id = ?", 4)
+                                .SELECT("COALESCE(?, id) AS second_value", 5);
+
+                assertEquals(
+                                "SELECT COALESCE(?, id) AS first_value, COALESCE(?, id) AS second_value FROM users " +
+                                                "WHERE enabled = ? AND role_id = ? ORDER BY CASE WHEN priority = ? THEN id END",
+                                builder.getSql());
+                assertEquals(Arrays.asList(1, 5, 2, 4, 3), builder.getParameters());
+        }
 }
