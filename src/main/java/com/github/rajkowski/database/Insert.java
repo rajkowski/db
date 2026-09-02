@@ -124,7 +124,8 @@ public class Insert extends QuerySpec {
     String columnName = normalized.substring(0, equalsIndex).trim();
     String rawExpression = normalized.substring(equalsIndex + 1).trim();
     if (columnName.isEmpty() || rawExpression.isEmpty()) {
-      throw new IllegalArgumentException("Insert field expression must include both a column name and value expression.");
+      throw new IllegalArgumentException(
+          "Insert field expression must include both a column name and value expression.");
     }
     insertEntries.add(new RawField(sanitizeIdentifier(columnName), rawExpression));
     return this;
@@ -238,7 +239,7 @@ public class Insert extends QuerySpec {
    * @param longitude the point longitude
    * @return this builder for chaining
    */
-  public Insert SET(String name, double latitude, double longitude, CastType castType) {
+  public Insert FIELD(String name, double latitude, double longitude, CastType castType) {
     return FIELDS(new Field(name, latitude, longitude, castType));
   }
 
