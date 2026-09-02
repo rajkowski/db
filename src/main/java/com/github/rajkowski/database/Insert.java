@@ -333,7 +333,7 @@ public class Insert extends QuerySpec {
   }
 
   public Insert FIELD_UNLESS_MATCHES(String name, Object value, Object nullComparisonValue) {
-    if (value == null || (nullComparisonValue != null && value.equals(nullComparisonValue))) {
+    if (value == null || (nullComparisonValue != null && valuesMatch(value, nullComparisonValue))) {
       return this;
     }
     return FIELD(name, value);

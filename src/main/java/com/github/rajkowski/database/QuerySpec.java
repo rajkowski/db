@@ -15,6 +15,7 @@
  */
 package com.github.rajkowski.database;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -449,6 +450,30 @@ public class QuerySpec {
       throw new IllegalArgumentException("Invalid SQL identifier: " + identifier);
     }
     return trimmed;
+  }
+
+  /**
+   * Compares a runtime value against a caller-supplied comparison value, treating boxed numeric
+   * types (e.g. Long vs Integer) as equal when their numeric values match.
+   *
+   * @param value the current runtime value
+   * @param comparisonValue the value to compare against
+   * @return true when the values are considered equal
+   */
+  protected static boolean valuesMatch(Object value, Object comparisonValue) {
+    if (value == null || comparisonValue == null) {
+      return value == comparisonValue;
+    }
+    if (value instanceof Number && comparisonValue instanceof Number) {
+      Number a = (Number) value;
+      Number b = (Number) comparisonValue;
+      if (a instanceof Double || a instanceof Float || b instanceof Double || b instanceof Float
+          || a instanceof BigDecimal || b instanceof BigDecimal) {
+        return a.doubleValue() == b.doubleValue();
+      }
+      return a.longValue() == b.longValue();
+    }
+    return value.equals(comparisonValue);
   }
 
   /**

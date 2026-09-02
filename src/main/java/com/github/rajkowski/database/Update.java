@@ -287,14 +287,14 @@ public class Update extends QuerySpec {
   }
 
   public Update SET_WHEN_MATCHES(String name, Object value, Object comparisonValue) {
-    if (value == null || (comparisonValue != null && !value.equals(comparisonValue))) {
+    if (value == null || (comparisonValue != null && !valuesMatch(value, comparisonValue))) {
       return this;
     }
     return SET(name, value);
   }
 
   public Update SET_UNLESS_MATCHES(String name, Object value, Object nullComparisonValue) {
-    if (value == null || (nullComparisonValue != null && value.equals(nullComparisonValue))) {
+    if (value == null || (nullComparisonValue != null && valuesMatch(value, nullComparisonValue))) {
       return this;
     }
     return SET(name, value);

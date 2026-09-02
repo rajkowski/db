@@ -684,7 +684,7 @@ public class Select extends QuerySpec {
     if (value == null) {
       return false;
     }
-    return skipValue.equals(value);
+    return valuesMatch(value, skipValue);
   }
 
   private void addCondition(String clause, Object... values) {
