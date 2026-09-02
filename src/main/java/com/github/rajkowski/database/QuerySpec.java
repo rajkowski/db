@@ -22,6 +22,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.postgresql.util.PGInterval;
 import org.postgresql.util.PGobject;
 
@@ -29,6 +31,8 @@ import org.postgresql.util.PGobject;
  * Represents a SQL query specification, including the SQL text, bound parameters, and execution metrics.
  */
 public class QuerySpec {
+  private static final Log log = LogFactory.getLog(QuerySpec.class);
+
   protected final StringBuilder sql = new StringBuilder();
   protected final List<Object> parameters = new ArrayList<>();
   private QueryMetrics metrics = new QueryMetrics();
@@ -331,18 +335,23 @@ public class QuerySpec {
     String normalized = clause.trim();
     if (normalized.contains(";") || normalized.contains("--") || normalized.contains("/*")
         || normalized.contains("*/")) {
-      throw new IllegalArgumentException("Unsafe SQL fragment detected; use parameterized values only.");
+      throw unsafeConditionClause(clause);
     }
     if (!normalized.matches("[A-Za-z0-9_\\.\\s=<>!()?@%:,\\[\\]\\+\\-\\*\\|&'\\\"$\\/{}/\\\\]+")) {
-      throw new IllegalArgumentException("Unsafe SQL fragment detected; use parameterized values only.");
+      throw unsafeConditionClause(clause);
     }
     String withoutQuotedLiterals = normalized.replaceAll("'([^']|'')*'", " ");
     String withoutSubqueries = stripSubqueryBodies(withoutQuotedLiterals);
     if (withoutSubqueries.matches(".*(?i)(^|[^A-Za-z0-9_])(true|false)(?=$|[^A-Za-z0-9_]).*")
         || withoutSubqueries.matches(".*(^|[^A-Za-z_])\\d+(?:\\.\\d+)?(?=$|[^A-Za-z0-9_]).*")) {
-      throw new IllegalArgumentException("Unsafe SQL fragment detected; use parameterized values only.");
+      throw unsafeConditionClause(clause);
     }
     return normalized;
+  }
+
+  private static IllegalArgumentException unsafeConditionClause(String clause) {
+    log.warn("Rejected unsafe SQL condition clause: " + clause);
+    return new IllegalArgumentException("Unsafe SQL fragment detected; use parameterized values only.");
   }
 
   protected static String sanitizeAssignmentClause(String clause) {
