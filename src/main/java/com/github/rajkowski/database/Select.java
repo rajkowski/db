@@ -360,6 +360,17 @@ public class Select extends QuerySpec {
   }
 
   /**
+   * Adds a WHERE condition with a String array bound as a single parameter.
+   *
+   * @param clause the filter clause using ? placeholders
+   * @param value the String array bound to the clause
+   * @return this builder for chaining
+   */
+  public Select WHERE(String clause, String[] value) {
+    return WHERE(clause, (Object) value);
+  }
+
+  /**
    * Appends an additional AND condition to the existing query.
    *
    * @param clause the filter clause using ? placeholders
@@ -369,6 +380,17 @@ public class Select extends QuerySpec {
   public Select AND(String clause, Object... values) {
     addCondition(clause, values);
     return this;
+  }
+
+  /**
+   * Appends an additional AND condition with a String array bound as a single parameter.
+   *
+   * @param clause the filter clause using ? placeholders
+   * @param value the String array bound to the clause
+   * @return this builder for chaining
+   */
+  public Select AND(String clause, String[] value) {
+    return AND(clause, (Object) value);
   }
 
   /**
@@ -696,7 +718,11 @@ public class Select extends QuerySpec {
       }
     }
     whereClauses.add(normalized);
-    whereClauseParameters.add(toParameterList(values));
+    List<Object> conditionValues = toParameterList(values);
+    if (!conditionValues.isEmpty() && conditionValues.get(conditionValues.size() - 1) instanceof CastType) {
+      conditionValues.remove(conditionValues.size() - 1);
+    }
+    whereClauseParameters.add(conditionValues);
   }
 
   private List<Object> toParameterList(Object... values) {
