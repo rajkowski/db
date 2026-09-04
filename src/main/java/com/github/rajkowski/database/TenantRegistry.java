@@ -16,6 +16,7 @@
 package com.github.rajkowski.database;
 
 import java.util.Map;
+import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -35,13 +36,10 @@ public class TenantRegistry implements TenantDataSourceRegistry {
    * @param dataSource the datasource to register
    */
   public void register(String tenantId, DataSource dataSource) {
-    if (tenantId == null || tenantId.isBlank()) {
-      throw new IllegalArgumentException("Tenant id cannot be null or blank");
-    }
     if (dataSource == null) {
       throw new IllegalArgumentException("DataSource cannot be null");
     }
-    dataSources.put(tenantId, dataSource);
+    dataSources.put(normalizeTenantId(tenantId), dataSource);
   }
 
   /**
@@ -51,10 +49,7 @@ public class TenantRegistry implements TenantDataSourceRegistry {
    * @return the datasource for the tenant, or null if not registered
    */
   public DataSource getDataSource(String tenantId) {
-    if (tenantId == null || tenantId.isBlank()) {
-      throw new IllegalArgumentException("Tenant id cannot be null or blank");
-    }
-    return dataSources.get(tenantId);
+    return dataSources.get(normalizeTenantId(tenantId));
   }
 
   /**
@@ -63,10 +58,7 @@ public class TenantRegistry implements TenantDataSourceRegistry {
    * @param tenantId the tenant identifier to unregister
    */
   public void unregister(String tenantId) {
-    if (tenantId == null || tenantId.isBlank()) {
-      throw new IllegalArgumentException("Tenant id cannot be null or blank");
-    }
-    dataSources.remove(tenantId);
+    dataSources.remove(normalizeTenantId(tenantId));
   }
 
   /**
@@ -83,10 +75,7 @@ public class TenantRegistry implements TenantDataSourceRegistry {
    * @return true when the tenant is registered
    */
   public boolean contains(String tenantId) {
-    if (tenantId == null || tenantId.isBlank()) {
-      throw new IllegalArgumentException("Tenant id cannot be null or blank");
-    }
-    return dataSources.containsKey(tenantId);
+    return dataSources.containsKey(normalizeTenantId(tenantId));
   }
 
   /**
@@ -96,5 +85,12 @@ public class TenantRegistry implements TenantDataSourceRegistry {
    */
   public Set<String> getTenantIds() {
     return Set.copyOf(dataSources.keySet());
+  }
+
+  private static String normalizeTenantId(String tenantId) {
+    if (tenantId == null || tenantId.isBlank()) {
+      throw new IllegalArgumentException("Tenant id cannot be null or blank");
+    }
+    return tenantId.trim().toLowerCase(Locale.ROOT);
   }
 }
