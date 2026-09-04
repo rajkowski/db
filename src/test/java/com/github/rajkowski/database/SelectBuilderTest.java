@@ -70,9 +70,8 @@ public class SelectBuilderTest extends TestCase {
                         "ORDER BY files.file_id DESC",
                 spec.getSql());
         assertEquals("report.pdf", spec.getParameters().get(0));
-        assertEquals("pdf", spec.getParameters().get(1));
-        assertEquals("txt", spec.getParameters().get(2));
-        assertEquals("%invoice%", spec.getParameters().get(3));
+        assertSame(fileTypes, spec.getParameters().get(1));
+        assertEquals("%invoice%", spec.getParameters().get(2));
     }
 
     public void testSelectBuilderSupportsAnyConditionWithStringArrayCastType() {
@@ -88,6 +87,7 @@ public class SelectBuilderTest extends TestCase {
         assertEquals(
                 "SELECT id FROM files WHERE LOWER(files.filename) = ? AND LOWER(files.extension) = ANY(?)",
                 spec.getSql());
+        assertEquals(2, spec.getParameters().size());
         assertEquals("report.pdf", spec.getParameters().get(0));
         assertSame(extensions, spec.getParameters().get(1));
     }

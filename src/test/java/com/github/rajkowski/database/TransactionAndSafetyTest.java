@@ -67,6 +67,12 @@ public class TransactionAndSafetyTest extends TestCase {
             DB.registerTenantDataSource("tenant-a", replacement);
             assertSame(replacement, DB.getTenantRegistry().getDataSource("tenant-a"));
 
+            DB.registerTenantDataSource(" Tenant-A ", primary);
+            assertEquals(2, DB.getTenantIds().size());
+            assertSame(primary, DB.getTenantRegistry().getDataSource("TENANT-A"));
+            DB.getTenantRegistry().unregister(" tenant-a ");
+            assertFalse(DB.getTenantRegistry().contains("TENANT-A"));
+
             try {
                 DB.registerTenantDataSource("", primary);
                 fail("Expected IllegalArgumentException for blank tenant id");
