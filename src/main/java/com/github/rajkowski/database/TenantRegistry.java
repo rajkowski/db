@@ -25,7 +25,7 @@ import javax.sql.DataSource;
 /**
  * Registry for tenant-specific datasources
  */
-public class TenantRegistry implements TenantDataSourceRegistry {
+public class TenantRegistry {
 
   private final Map<String, DataSource> dataSources = new ConcurrentHashMap<>();
 
