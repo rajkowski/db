@@ -28,6 +28,7 @@ import javax.sql.DataSource;
 public class TenantRegistry {
 
   private final Map<String, DataSource> dataSources = new ConcurrentHashMap<>();
+  private final TenantConnectionManager connectionManager = new TenantConnectionManager();
 
   /**
    * Registers a datasource for a tenant id.
@@ -39,7 +40,47 @@ public class TenantRegistry {
     if (dataSource == null) {
       throw new IllegalArgumentException("DataSource cannot be null");
     }
-    dataSources.put(normalizeTenantId(tenantId), dataSource);
+    String normalizedTenantId = normalizeTenantId(tenantId);
+    dataSources.put(normalizedTenantId, dataSource);
+    connectionManager.register(normalizedTenantId, dataSource);
+  }
+
+  /**
+   * Registers a datasource for a tenant id under a shared connection pool group, for example when
+   * several tenants use different schemas on the same database server. Tenants registered under
+   * the same pool group compete for that group's connection budget; tenants registered under a
+   * pool group used by no other tenant get a dedicated, unshared budget.
+   *
+   * @param tenantId the tenant identifier to associate with the datasource
+   * @param dataSource the datasource to register
+   * @param poolGroup the pool group identifier that this tenant's budget is shared with
+   */
+  public void register(String tenantId, DataSource dataSource, String poolGroup) {
+    if (dataSource == null) {
+      throw new IllegalArgumentException("DataSource cannot be null");
+    }
+    String normalizedTenantId = normalizeTenantId(tenantId);
+    dataSources.put(normalizedTenantId, dataSource);
+    connectionManager.register(normalizedTenantId, dataSource, poolGroup);
+  }
+
+  public void setMaximumConnections(int maximumConnections) {
+    connectionManager.setMaximumConnections(maximumConnections);
+  }
+
+  /**
+   * Sets the maximum number of physical connections shared by tenants registered under the given
+   * pool group.
+   *
+   * @param poolGroup the pool group identifier
+   * @param maximumConnections the maximum number of connections
+   */
+  public void setMaximumConnections(String poolGroup, int maximumConnections) {
+    connectionManager.setMaximumConnections(poolGroup, maximumConnections);
+  }
+
+  public java.sql.Connection getConnection(String tenantId) throws java.sql.SQLException {
+    return connectionManager.getConnection(tenantId);
   }
 
   /**
@@ -58,7 +99,9 @@ public class TenantRegistry {
    * @param tenantId the tenant identifier to unregister
    */
   public void unregister(String tenantId) {
-    dataSources.remove(normalizeTenantId(tenantId));
+    String normalizedTenantId = normalizeTenantId(tenantId);
+    dataSources.remove(normalizedTenantId);
+    connectionManager.unregister(normalizedTenantId);
   }
 
   /**
@@ -66,6 +109,7 @@ public class TenantRegistry {
    */
   public void clear() {
     dataSources.clear();
+    connectionManager.clear();
   }
 
   /**

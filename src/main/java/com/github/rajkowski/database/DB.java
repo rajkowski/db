@@ -110,6 +110,31 @@ public final class DB {
   }
 
   /**
+   * Registers a datasource for a tenant under a shared connection pool group, for example when
+   * several tenants use different schemas on the same database server. Tenants registered under
+   * the same pool group share that group's connection budget; tenants registered under a pool
+   * group used by no other tenant get a dedicated, unshared budget.
+   *
+   * @param tenantId the tenant identifier to associate with the datasource
+   * @param dataSource the datasource for tenant-scoped database operations
+   * @param poolGroup the pool group identifier that this tenant's budget is shared with
+   */
+  public static void registerTenantDataSource(String tenantId, DataSource dataSource, String poolGroup) {
+    tenantRegistry.register(tenantId, dataSource, poolGroup);
+  }
+
+  /**
+   * Sets the maximum number of physical connections shared by tenants registered under the given
+   * pool group.
+   *
+   * @param poolGroup the pool group identifier
+   * @param maximumConnections the maximum number of connections
+   */
+  public static void setTenantMaximumConnections(String poolGroup, int maximumConnections) {
+    tenantRegistry.setMaximumConnections(poolGroup, maximumConnections);
+  }
+
+  /**
    * Returns the tenant identifiers currently registered for datasource resolution.
    *
    * @return an immutable snapshot of registered tenant identifiers
@@ -411,6 +436,10 @@ public final class DB {
     if (currentDataSource == null) {
       throw new IllegalStateException(
           "No DataSource configured. Initialize DB.setDataSource(...) or DB.setTenantRegistry(...) before executing queries.");
+    }
+    String currentTenantId = tenantId.get();
+    if (currentTenantId != null) {
+      return tenantRegistry.getConnection(currentTenantId);
     }
     return currentDataSource.getConnection();
   }

@@ -298,6 +298,34 @@ registry.register("tenant-99", tenantDataSourceB);
 DB.setTenantRegistry(registry);
 ```
 
+#### Sharing a connection budget across tenants
+
+Tenants that live on the same physical database server (for example, separate schemas on one server) can share an aggregate connection budget instead of each competing against a single global limit. Pass a pool group id when registering, and set that group's cap. Tenants registered under a pool group used by no one else are effectively dedicated: they aren't throttled by other tenants and are limited only by their own datasource's pool size.
+
+```java
+TenantRegistry registry = new TenantRegistry();
+
+// tenant-42 and tenant-43 share one database server, so they share a budget
+registry.register("tenant-42", tenantDataSourceA, "server-1");
+registry.register("tenant-43", tenantDataSourceC, "server-1");
+registry.setMaximumConnections("server-1", 10);
+
+// tenant-99 has its own dedicated server/pool
+registry.register("tenant-99", tenantDataSourceB, "tenant-99");
+
+DB.setTenantRegistry(registry);
+```
+
+The same pool group registration is available through the `DB` facade:
+
+```java
+DB.registerTenantDataSource("tenant-42", tenantDataSourceA, "server-1");
+DB.registerTenantDataSource("tenant-43", tenantDataSourceC, "server-1");
+DB.setTenantMaximumConnections("server-1", 10);
+
+DB.registerTenantDataSource("tenant-99", tenantDataSourceB, "tenant-99");
+```
+
 At the start of a request, resolve the tenant id from the request context and activate it once:
 
 ```java
