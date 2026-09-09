@@ -210,11 +210,10 @@ public class TenantConnectionManager {
           .filter(pool -> pool != requestedPool)
           .filter(this::isIdle)
           .sorted(Comparator.comparingLong(pool -> pool.lastAccess))
-          .forEach(pool -> {
-            if (totalPhysicalConnections(group) >= group.maximumConnections && pool.dataSource instanceof HikariDataSource) {
-              ((HikariDataSource) pool.dataSource).getHikariPoolMXBean().softEvictConnections();
-            }
-          });
+          .filter(pool -> totalPhysicalConnections(group) >= group.maximumConnections)
+          .filter(pool -> pool.dataSource instanceof HikariDataSource)
+          .findFirst()
+          .ifPresent(pool -> ((HikariDataSource) pool.dataSource).getHikariPoolMXBean().softEvictConnections());
     }
   }
 

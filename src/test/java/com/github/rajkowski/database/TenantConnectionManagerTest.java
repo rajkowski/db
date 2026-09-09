@@ -81,6 +81,36 @@ public class TenantConnectionManagerTest {
     }
 
     @Test
+    public void onlyLeastRecentlyUsedIdlePoolIsEvictedWhenGroupIsFull() throws Exception {
+        try (HikariDataSource first = createDataSource("manager_lru_only_first");
+                HikariDataSource second = createDataSource("manager_lru_only_second");
+                HikariDataSource third = createDataSource("manager_lru_only_third")) {
+            TenantConnectionManager manager = new TenantConnectionManager();
+            manager.setMaximumConnections(2);
+            manager.register("first", first);
+            manager.register("second", second);
+            manager.register("third", third);
+
+            try (Connection ignored = manager.getConnection("first")) {
+                assertTrue(first.getHikariPoolMXBean().getTotalConnections() > 0);
+            }
+            try (Connection ignored = manager.getConnection("second")) {
+                assertTrue(second.getHikariPoolMXBean().getTotalConnections() > 0);
+            }
+            try (Connection ignored = manager.getConnection("third")) {
+                assertTrue(third.getHikariPoolMXBean().getTotalConnections() > 0);
+            }
+
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+            while (first.getHikariPoolMXBean().getTotalConnections() > 0 && System.nanoTime() < deadline) {
+                Thread.yield();
+            }
+            assertTrue(first.getHikariPoolMXBean().getTotalConnections() == 0);
+            assertTrue(second.getHikariPoolMXBean().getTotalConnections() > 0);
+        }
+    }
+
+    @Test
     public void tenantsInDifferentPoolGroupsAreNotThrottledByEachOther() throws Exception {
         try (HikariDataSource shared = createDataSource("manager_group_shared");
                 HikariDataSource dedicated = createDataSource("manager_group_dedicated")) {
