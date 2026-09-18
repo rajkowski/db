@@ -63,12 +63,9 @@ public class Select extends QuerySpec {
    * @param columns the columns to select; when empty, the builder selects all columns
    */
   public Select(String... columns) {
-    if (columns == null || columns.length == 0) {
-      selectExpressions.add("*");
-      selectExpressionParameters.add(new ArrayList<>());
-      return;
+    if (columns != null && columns.length > 0) {
+      SELECT(columns);
     }
-    SELECT(columns);
   }
 
   /**
@@ -79,25 +76,11 @@ public class Select extends QuerySpec {
    */
   public Select SELECT(String... columns) {
     if (columns == null || columns.length == 0) {
-      if (selectExpressions.isEmpty()) {
-        selectExpressions.add("*");
-      }
       return this;
     }
 
     for (String column : columns) {
       String sanitized = sanitizeSelectExpression(column);
-      if (sanitized.equals("*")) {
-        selectExpressions.clear();
-        selectExpressionParameters.clear();
-        selectExpressions.add("*");
-        selectExpressionParameters.add(new ArrayList<>());
-        return this;
-      }
-      if (selectExpressions.size() == 1 && selectExpressions.get(0).equals("*")) {
-        selectExpressions.clear();
-        selectExpressionParameters.clear();
-      }
       selectExpressions.add(sanitized);
       selectExpressionParameters.add(new ArrayList<>());
     }
@@ -113,10 +96,6 @@ public class Select extends QuerySpec {
    */
   public Select SELECT(String expression, Object... values) {
     String sanitized = sanitizeSelectExpression(expression);
-    if (selectExpressions.size() == 1 && selectExpressions.get(0).equals("*")) {
-      selectExpressions.clear();
-      selectExpressionParameters.clear();
-    }
     selectExpressions.add(sanitized);
     selectExpressionParameters.add(toParameterList(values));
     return this;
@@ -326,8 +305,8 @@ public class Select extends QuerySpec {
     if (!safeExpression.matches("[A-Za-z0-9_.*]+")) {
       throw new IllegalArgumentException("COUNT expression contains unsupported characters.");
     }
-    selectExpressions.clear();
     selectExpressions.add("COUNT(" + safeExpression + ")");
+    selectExpressionParameters.add(new ArrayList<>());
     return this;
   }
 

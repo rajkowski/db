@@ -105,6 +105,19 @@ public class SelectBuilderTest extends TestCase {
         assertEquals(Arrays.asList(true), spec.getParameters());
     }
 
+    public void testSelectBuilderPreservesWildcardSelectionWhenColumnsAreAddedLater() {
+        Select builder = DB.SELECT("*")
+                .FROM("users")
+                .WHERE("active = ?", true);
+
+        builder.SELECT("id", "name");
+
+        QuerySpec spec = builder;
+
+        assertEquals("SELECT *, id, name FROM users WHERE active = ?", spec.getSql());
+        assertEquals(Arrays.asList(true), spec.getParameters());
+    }
+
     public void testSelectBuilderSupportsJoinsAndCountAggregates() {
         QuerySpec spec = DB.SELECT()
                 .COUNT("*")
@@ -244,7 +257,7 @@ public class SelectBuilderTest extends TestCase {
     }
 
         public void testSelectBuilderOrdersParametersByGeneratedSqlWhenBuiltOutOfOrder() {
-                Select builder = DB.SELECT().FROM("users");
+                Select builder = DB.SELECT("*").FROM("users");
                 builder.SELECT("COALESCE(?, id) AS first_value", 1)
                                 .AND("enabled = ?", 2)
                                 .ORDER_BY("CASE WHEN priority = ? THEN id END", 3)
@@ -252,7 +265,7 @@ public class SelectBuilderTest extends TestCase {
                                 .SELECT("COALESCE(?, id) AS second_value", 5);
 
                 assertEquals(
-                                "SELECT COALESCE(?, id) AS first_value, COALESCE(?, id) AS second_value FROM users " +
+                                "SELECT *, COALESCE(?, id) AS first_value, COALESCE(?, id) AS second_value FROM users " +
                                                 "WHERE enabled = ? AND role_id = ? ORDER BY CASE WHEN priority = ? THEN id END",
                                 builder.getSql());
                 assertEquals(Arrays.asList(1, 5, 2, 4, 3), builder.getParameters());
