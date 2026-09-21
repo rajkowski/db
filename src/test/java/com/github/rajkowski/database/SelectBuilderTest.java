@@ -92,6 +92,16 @@ public class SelectBuilderTest extends TestCase {
         assertSame(extensions, spec.getParameters().get(1));
     }
 
+    public void testSelectBuilderDoesNotCollapseDuplicateConditionClauses() {
+        QuerySpec spec = DB.SELECT("id")
+                .FROM("users")
+                .WHERE("active = ?", true)
+                .AND("active = ?", true);
+
+        assertEquals("SELECT id FROM users WHERE active = ? AND active = ?", spec.getSql());
+        assertEquals(Arrays.asList(true, true), spec.getParameters());
+    }
+
     public void testSelectBuilderCanBeBuiltOutOfOrderAndColumnsCanBeAddedLater() {
         Select builder = DB.SELECT();
         builder.FROM("users");

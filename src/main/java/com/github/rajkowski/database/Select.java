@@ -690,12 +690,6 @@ public class Select extends QuerySpec {
 
   private void addCondition(String clause, Object... values) {
     String normalized = sanitizeConditionClause(clause);
-    if (!whereClauses.isEmpty()) {
-      String previous = whereClauses.get(whereClauses.size() - 1);
-      if (previous.equals(normalized)) {
-        return;
-      }
-    }
     whereClauses.add(normalized);
     List<Object> conditionValues = toParameterList(values);
     if (!conditionValues.isEmpty() && conditionValues.get(conditionValues.size() - 1) instanceof CastType) {
