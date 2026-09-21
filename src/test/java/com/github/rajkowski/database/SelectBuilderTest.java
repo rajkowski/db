@@ -115,6 +115,21 @@ public class SelectBuilderTest extends TestCase {
         assertEquals(Arrays.asList(true), spec.getParameters());
     }
 
+    public void testDefaultSortIsUsedOnlyWhenExplicitSortIsAbsent() {
+        DataConstraints constraints = new DataConstraints();
+        constraints.setDefaultColumnToSortBy("created_at");
+        assertEquals("created_at", constraints.getEffectiveColumnsToSortBy()[0]);
+        assertTrue(Arrays.equals(new String[] { "created_at" }, constraints.getEffectiveColumnsToSortBy()));
+
+        constraints.setColumnToSortBy("name", "DESC");
+        assertTrue(Arrays.equals(new String[] { "name" }, constraints.getEffectiveColumnsToSortBy()));
+        assertTrue(Arrays.equals(new String[] { "desc" }, constraints.getEffectiveSortOrder()));
+
+        constraints.setColumnToSortBy("email");
+        assertTrue(Arrays.equals(new String[] { "email" }, constraints.getEffectiveColumnsToSortBy()));
+        assertNull(constraints.getEffectiveSortOrder());
+    }
+
     public void testSelectBuilderPreservesWildcardSelectionWhenColumnsAreAddedLater() {
         Select builder = DB.SELECT("*")
                 .FROM("users")

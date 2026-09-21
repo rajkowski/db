@@ -601,15 +601,11 @@ public class Select extends QuerySpec {
     if (constraints == null) {
       return null;
     }
-    String[] columns = constraints.getColumnsToSortBy();
+    String[] columns = constraints.getEffectiveColumnsToSortBy();
     if (columns == null || columns.length == 0) {
-      String defaultColumn = constraints.getDefaultColumnToSortBy();
-      if (defaultColumn == null || defaultColumn.trim().isEmpty()) {
-        return null;
-      }
-      columns = new String[] { defaultColumn };
+      return null;
     }
-    String[] ordering = constraints.getSortOrder();
+    String[] ordering = constraints.getEffectiveSortOrder();
     StringBuilder builder = new StringBuilder();
     for (int i = 0; i < columns.length; i++) {
       if (i > 0) {

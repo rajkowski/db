@@ -135,6 +135,7 @@ public class DataConstraints extends Paging implements Serializable {
    */
   public void setColumnToSortBy(String name) {
     columnsToSortBy = new String[] { name };
+    sortOrder = null;
   }
 
   /**
@@ -155,15 +156,33 @@ public class DataConstraints extends Paging implements Serializable {
     return columnsToSortBy;
   }
 
+  public String[] getEffectiveColumnsToSortBy() {
+    if (columnsToSortBy != null && columnsToSortBy.length > 0) {
+      return columnsToSortBy;
+    }
+    if (defaultColumnToSortBy != null && !defaultColumnToSortBy.trim().isEmpty()) {
+      return new String[] { defaultColumnToSortBy.trim() };
+    }
+    return null;
+  }
+
   /**
    * Used by the application to override the default sort.
    */
   public void setColumnsToSortBy(String[] columnsToSortBy) {
     this.columnsToSortBy = columnsToSortBy;
+    this.sortOrder = null;
   }
 
   public String[] getSortOrder() {
     return sortOrder;
+  }
+
+  public String[] getEffectiveSortOrder() {
+    if (columnsToSortBy != null) {
+      return sortOrder;
+    }
+    return null;
   }
 
   public void setSortOrder(String[] sortOrder) {
@@ -171,10 +190,11 @@ public class DataConstraints extends Paging implements Serializable {
   }
 
   public boolean containsColumnToSortBy(String name) {
-    if (columnsToSortBy == null || name == null) {
+    String[] effectiveColumns = getEffectiveColumnsToSortBy();
+    if (effectiveColumns == null || name == null) {
       return false;
     }
-    for (String column : columnsToSortBy) {
+    for (String column : effectiveColumns) {
       if (name.equals(column)) {
         return true;
       }
@@ -183,7 +203,7 @@ public class DataConstraints extends Paging implements Serializable {
   }
 
   public boolean hasSortOrder() {
-    return defaultColumnToSortBy != null || columnsToSortBy != null;
+    return getEffectiveColumnsToSortBy() != null;
   }
 
   public List<String> getPageList() {
