@@ -434,7 +434,11 @@ public class Select extends QuerySpec {
     if (constraints == null) {
       return this;
     }
-    return ORDER_BY(constraints).PAGING(constraints);
+    this.dataConstraints = constraints;
+    if (this.orderByClause == null || this.orderByClause.isEmpty()) {
+      ORDER_BY(constraints);
+    }
+    return PAGING(constraints);
   }
 
   /**
@@ -473,6 +477,9 @@ public class Select extends QuerySpec {
       return this;
     }
     this.dataConstraints = constraints;
+    if (this.orderByClause != null && !this.orderByClause.isEmpty()) {
+      return this;
+    }
     String orderBy = buildOrderByClause(constraints);
     if (orderBy != null && !orderBy.isEmpty()) {
       return ORDER_BY(orderBy);

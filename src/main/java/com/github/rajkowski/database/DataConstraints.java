@@ -124,9 +124,13 @@ public class DataConstraints extends Paging implements Serializable {
 
   /**
    * Used by the repository objects to define a default sort.
+   *
+   * <p>The default is retained as a fallback and is only used when no explicit
+   * sort is set at the moment the SQL is built. This keeps the final decision
+   * dynamic because callers may change the sort state before generating SQL.</p>
    */
   public DataConstraints setDefaultColumnToSortBy(String columnToSortBy) {
-    this.defaultColumnToSortBy = columnToSortBy;
+    this.defaultColumnToSortBy = columnToSortBy == null || columnToSortBy.trim().isEmpty() ? null : columnToSortBy.trim();
     return this;
   }
 

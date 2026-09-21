@@ -130,6 +130,34 @@ public class SelectBuilderTest extends TestCase {
         assertNull(constraints.getEffectiveSortOrder());
     }
 
+    public void testDefaultSortDoesNotOverrideExplicitSortAlreadySet() {
+        DataConstraints constraints = new DataConstraints();
+        constraints.setColumnToSortBy("name", "DESC");
+        constraints.setDefaultColumnToSortBy("created_at");
+
+        assertTrue(Arrays.equals(new String[] { "name" }, constraints.getEffectiveColumnsToSortBy()));
+        assertTrue(Arrays.equals(new String[] { "desc" }, constraints.getEffectiveSortOrder()));
+
+        QuerySpec spec = DB.SELECT("id")
+                .FROM("users")
+                .ORDER_BY(constraints);
+
+        assertEquals("SELECT id FROM users ORDER BY name DESC", spec.getSql());
+    }
+
+    public void testExplicitOrderByPrecedesDataConstraintDefaultsWhenUsingWith() {
+        DataConstraints constraints = new DataConstraints();
+        constraints.setDefaultColumnToSortBy("created_at");
+        constraints.setColumnToSortBy("name", "ASC");
+
+        QuerySpec spec = DB.SELECT("id")
+                .FROM("users")
+                .ORDER_BY("email DESC")
+                .WITH(constraints);
+
+        assertEquals("SELECT id FROM users ORDER BY email DESC", spec.getSql());
+    }
+
     public void testSelectBuilderPreservesWildcardSelectionWhenColumnsAreAddedLater() {
         Select builder = DB.SELECT("*")
                 .FROM("users")
