@@ -4,13 +4,11 @@
   <groupId>com.github.rajkowski</groupId>
   <artifactId>db</artifactId>
   <packaging>jar</packaging>
-  <version>${revision}</version>
+  <version>1.0.17</version>
   <name>db</name>
   <url>https://github.com/rajkowski/db</url>
   <properties>
-    <revision>1.0.16</revision>
-    <maven.compiler.source>21</maven.compiler.source>
-    <maven.compiler.target>21</maven.compiler.target>
+    <java.version>21</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   <issueManagement>
@@ -59,17 +57,17 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>2.0.19</version>
+      <version>2.0.20</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-simple</artifactId>
-      <version>2.0.19</version>
+      <version>2.0.20</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>jcl-over-slf4j</artifactId>
-      <version>2.0.19</version>
+      <version>2.0.20</version>
     </dependency>
     <dependency>
       <groupId>com.h2database</groupId>
@@ -96,8 +94,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.13.0</version>
         <configuration>
-          <source>${maven.compiler.source}</source>
-          <target>${maven.compiler.target}</target>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
         </configuration>
       </plugin>
     </plugins>
