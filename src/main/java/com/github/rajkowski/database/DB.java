@@ -16,6 +16,8 @@
 
 package com.github.rajkowski.database;
 
+import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -1258,6 +1260,19 @@ public final class DB {
   }
 
   /**
+  * Writes the results of the supplied query to a CSV file using the provided column names.
+  *
+  * @param querySpec the SELECT query to stream
+  * @param file the destination CSV file
+  * @param columns the optional column names to write as the CSV header
+  * @throws SQLException if the query cannot be executed
+  * @throws IOException if the CSV file cannot be written
+  */
+  public static void writeCsv(QuerySpec querySpec, File file, String... columns) throws SQLException, IOException {
+    CsvExportHelper.writeCsv(querySpec, file, columns);
+  }
+
+  /**
    * Populates the attached paging metadata with the total row count for a paginated SELECT.
    *
    * @param connection the connection used to execute the query
@@ -1323,14 +1338,14 @@ public final class DB {
    * @param parameters the parameter values in execution order
    * @throws SQLException if a parameter cannot be bound
    */
-  private static void bindParameters(PreparedStatement statement, List<Object> parameters) throws SQLException {
+  static void bindParameters(PreparedStatement statement, List<Object> parameters) throws SQLException {
     for (int i = 0; i < parameters.size(); i++) {
       Object parameter = parameters.get(i);
       bindParameter(statement, i + 1, parameter);
     }
   }
 
-  private static void bindParameter(PreparedStatement statement, int index, Object parameter) throws SQLException {
+  static void bindParameter(PreparedStatement statement, int index, Object parameter) throws SQLException {
     if (parameter == null) {
       statement.setNull(index, Types.NULL);
       return;
@@ -1373,7 +1388,7 @@ public final class DB {
     statement.setObject(index, parameter);
   }
 
-  private static void bindFieldValue(PreparedStatement statement, int index, Field field) throws SQLException {
+  static void bindFieldValue(PreparedStatement statement, int index, Field field) throws SQLException {
     if (field == null) {
       statement.setNull(index, Types.NULL);
       return;
