@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,6 +34,10 @@ import org.postgresql.util.PGobject;
  */
 public class QuerySpec {
   private static final Log log = LogFactory.getLog(QuerySpec.class);
+  private static final Pattern NUMERIC_LITERAL =
+      Pattern.compile("(?<![A-Za-z_])\\d+(?:\\.\\d+)?(?![A-Za-z0-9_])");
+  private static final Pattern QUOTED_LITERAL_COMPARISON =
+      Pattern.compile("(?is)(?:^|.*\\b(?:OR|AND)\\b\\s*)(?:'([^']|'')*'|\"[^\"]*\")\\s*(?:=|<>|!=)\\s*(?:'([^']|'')*'|\"[^\"]*\")(?:.*|$)");
 
   protected final StringBuilder sql = new StringBuilder();
   protected final List<Object> parameters = new ArrayList<>();
@@ -329,6 +334,13 @@ public class QuerySpec {
     }
   }
 
+  /**
+   * Sanitizes a SQL condition clause by checking for unsafe patterns and numeric literals.
+   *
+   * @param clause the SQL condition clause to sanitize
+   * @return the sanitized SQL condition clause
+   * @throws IllegalArgumentException if the clause is deemed unsafe
+   */
   protected static String sanitizeConditionClause(String clause) {
     if (clause == null || clause.trim().isEmpty()) {
       throw new IllegalArgumentException("Condition clause cannot be empty.");
@@ -341,17 +353,37 @@ public class QuerySpec {
     if (!normalized.matches("[A-Za-z0-9_\\.\\s=<>!()?@%:,\\[\\]\\+\\-\\*\\|&'\\\"$\\/{}/\\\\]+")) {
       throw unsafeConditionClause(clause);
     }
+    if (containsQuotedLiteralTautology(normalized)) {
+      throw unsafeConditionClause(clause);
+    }
     String withoutQuotedLiterals = normalized.replaceAll("'([^']|'')*'", " ");
     String withoutSubqueries = stripSubqueryBodies(withoutQuotedLiterals);
-    if (withoutSubqueries.matches(".*(^|[^A-Za-z_])\\d+(?:\\.\\d+)?(?=$|[^A-Za-z0-9_]).*")) {
+    if (containsNumericLiteral(withoutSubqueries)) {
       throw unsafeConditionClause(clause);
     }
     return normalized;
   }
 
+  private static boolean containsNumericLiteral(String value) {
+    return value != null && NUMERIC_LITERAL.matcher(value).find();
+  }
+
   private static IllegalArgumentException unsafeConditionClause(String clause) {
     log.warn("Rejected unsafe SQL condition clause: " + clause);
     return new IllegalArgumentException("Unsafe SQL fragment detected; use parameterized values only.");
+  }
+
+  /**
+   * Checks if the given SQL clause contains a quoted literal tautology, such as 'x'='x'.
+   * 
+   * @param clause the SQL clause to check
+   * @return true if the clause contains a quoted literal tautology, false otherwise
+   */
+  private static boolean containsQuotedLiteralTautology(String clause) {
+    if (clause == null || clause.isBlank()) {
+      return false;
+    }
+    return QUOTED_LITERAL_COMPARISON.matcher(clause.trim()).matches();
   }
 
   protected static String sanitizeAssignmentClause(String clause) {

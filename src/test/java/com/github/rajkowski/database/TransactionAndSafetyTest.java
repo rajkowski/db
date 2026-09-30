@@ -154,6 +154,15 @@ public class TransactionAndSafetyTest extends TestCase {
         }
     }
 
+    public void testRejectsQuotedLiteralTautologyInWhereClause() {
+        try {
+            DB.SELECT("id").FROM("users").WHERE("username = 'x' OR 'x'='x'");
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("parameterized"));
+        }
+    }
+
     public void testAllowsNestedExistsWithBooleanConditionsAndBoundParameters() {
         String clause = "(collections.allows_guests = true OR (has_allowed_groups = true AND "
                 + "EXISTS (SELECT 1 FROM collection_groups WHERE collection_groups.collection_id = "
