@@ -109,6 +109,7 @@ public final class CsvExportHelper {
       return columns.clone();
     }
 
+    // When no header names are provided, derive them from the result metadata.
     String[] names = new String[columnCount];
     for (int index = 0; index < columnCount; index++) {
       String label = metadata.getColumnLabel(index + 1);

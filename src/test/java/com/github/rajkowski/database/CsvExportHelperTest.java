@@ -20,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.util.Locale;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -67,6 +68,38 @@ public class CsvExportHelperTest extends TestCase {
       assertTrue(csv.contains("1,alice,true"));
       assertTrue(csv.contains("2,bob,false"));
       assertTrue(csv.contains(System.lineSeparator()));
+    }
+  }
+
+  public void testCsvExportHelperUsesResultSetMetadataWhenNoColumnsAreProvided() throws Exception {
+    HikariConfig config = new HikariConfig();
+    config.setJdbcUrl("jdbc:h2:mem:" + uniqueDbName("db_csv_metadata") + ";DB_CLOSE_DELAY=-1");
+    config.setDriverClassName("org.h2.Driver");
+    config.setUsername("sa");
+    config.setPassword("");
+    config.setMaximumPoolSize(2);
+    config.setMinimumIdle(1);
+
+    try (HikariDataSource dataSource = new HikariDataSource(config)) {
+      DB.setDataSource(dataSource);
+
+      try (Connection connection = dataSource.getConnection();
+          PreparedStatement statement = connection.prepareStatement(
+              "CREATE TABLE people (id INTEGER PRIMARY KEY, name VARCHAR(50))")) {
+        statement.executeUpdate();
+      }
+
+      DB.INSERT().INTO("people").FIELDS(new Field("id", 7), new Field("name", "carol")).execute();
+
+      File csvFile = File.createTempFile("csv-metadata", ".csv");
+      csvFile.deleteOnExit();
+
+      CsvExportHelper.writeCsv(DB.SELECT("id", "name").FROM("people").ORDER_BY("id ASC"), csvFile);
+
+      String csv = Files.readString(csvFile.toPath(), StandardCharsets.UTF_8);
+      String upperCsv = csv.toUpperCase(Locale.ROOT);
+      assertTrue(upperCsv.contains("ID,NAME"));
+      assertTrue(upperCsv.contains("7,CAROL"));
     }
   }
 
