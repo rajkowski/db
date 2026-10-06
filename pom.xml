@@ -4,7 +4,7 @@
   <groupId>com.github.rajkowski</groupId>
   <artifactId>db</artifactId>
   <packaging>jar</packaging>
-  <version>1.0.18</version>
+  <version>1.0.19</version>
   <name>db</name>
   <url>https://github.com/rajkowski/db</url>
   <properties>
