@@ -300,7 +300,7 @@ public class Update extends QuerySpec {
     return SET(name, value);
   }
 
-  public Update SET_WHEN_MATCHES(String name, String value, Object comparisonValue, CastType castType) {
+  public Update SET_WHEN_MATCHES(String name, String value, String comparisonValue, CastType castType) {
     if (value == null || (comparisonValue != null && !valuesMatch(value, comparisonValue))) {
       return this;
     }

@@ -332,11 +332,25 @@ public class Insert extends QuerySpec {
     return FIELD(name, value);
   }
 
+  public Insert FIELD_UNLESS_NULL(String name, String value, CastType castType) {
+    if (value == null) {
+      return this;
+    }
+    return FIELDS(new Field(name, value, castType));
+  }
+
   public Insert FIELD_UNLESS_MATCHES(String name, Object value, Object nullComparisonValue) {
     if (value == null || (nullComparisonValue != null && valuesMatch(value, nullComparisonValue))) {
       return this;
     }
     return FIELD(name, value);
+  }
+
+  public Insert FIELD_UNLESS_MATCHES(String name, String value, String nullComparisonValue, CastType castType) {
+    if (value == null || (nullComparisonValue != null && valuesMatch(value, nullComparisonValue))) {
+      return this;
+    }
+    return FIELDS(new Field(name, value, castType));
   }
 
   /**
